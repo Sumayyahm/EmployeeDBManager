@@ -1,21 +1,17 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 const cTable = require('console.table');
-const { error } = require("console");
 
-// create the connection information for the sql database
 var connection = mysql.createConnection({
   host: "localhost",
   port: 3306,
   user: "root",
   password: "Youaremybootcamp1!",
-  database: "employeetracker_db"
-});
+  database: "employeetracker_db"});
 
-// connect to the mysql server and sql database
+
 connection.connect(function(err) {
   if (err) throw err;
-  // run the start function after the connection is made to prompt the user
   start();
 });
 
@@ -39,34 +35,22 @@ function start() {
         "View total utilized budget of a department"
       ]
     }).then(function(answer) {
-        //Switch Case statements for the menulist
+        console.log("\n");
         switch(answer.menulist) {
             case "View all employees" :
-                connection.query("SELECT id, firstName, lastName, title, departmentName, salary, manager FROM roles INNER JOIN employee ON roles.roleId = employee.id INNER JOIN department ON roles.department_id = department.deptId;", function(err, data) {
-                    if (err) throw err;
-                    console.table(data);
-                });
+                    viewEmployees();
                 break;
 
             case "View all employees by role" :
-                connection.query("SELECT title, concat(firstName, ' ', lastName) AS EmployeeName FROM roles INNER JOIN employee ON roles.roleId = employee.id;", function(err, data) {
-                    if (err) throw err;
-                    console.table(data);
-                });
+                viewEmployeeByRole();
                 break;
 
             case "View all employees by department" :
-                connection.query("SELECT departmentName, concat(firstName, ' ', lastName) AS EmployeeName FROM roles INNER JOIN employee ON roles.roleId = employee.id LEFT JOIN department ON roles.department_id = department.deptId;", function(err, data) {
-                    if (err) throw err;
-                    console.table(data);
-                });
+                viewEmployeesByDept();
                 break;
 
             case "View all employees by manager" :
-                connection.query("SELECT concat(firstName, ' ', lastName) AS EmployeeName , manager FROM roles INNER JOIN employee ON roles.roleId = employee.id AND roles.manager IS NOT NULL;", function(err, data) {
-                    if (err) throw err;
-                    console.table(data);
-                });
+                viewEmployeesByManager();
                 break;
 
             case "Add employee" :
@@ -93,6 +77,47 @@ function start() {
                 departmentBudget();
                 break;
         }
+    });
+}
+
+
+function viewEmployees() {
+    connection.query("SELECT id, firstName, lastName, title, departmentName, salary, manager FROM roles INNER JOIN employee ON roles.roleId = employee.id INNER JOIN department ON roles.department_id = department.deptId;", function(err, data) {
+        if (err) throw err;
+        console.log("\n");
+        console.table(data);
+        console.log("\n");
+        start();
+    });
+}
+
+function viewEmployeeByRole() {
+    connection.query("SELECT title, concat(firstName, ' ', lastName) AS EmployeeName FROM roles INNER JOIN employee ON roles.roleId = employee.id;", function(err, data) {
+        if (err) throw err;
+        console.log("\n");
+        console.table(data);
+        console.log("\n");
+        start();
+    });
+}
+
+function viewEmployeesByDept() {
+    connection.query("SELECT departmentName, concat(firstName, ' ', lastName) AS EmployeeName FROM roles INNER JOIN employee ON roles.roleId = employee.id LEFT JOIN department ON roles.department_id = department.deptId;", function(err, data) {
+        if (err) throw err;
+        console.log("\n");
+        console.table(data);
+        console.log("\n");
+        start();
+    });
+}
+
+function viewEmployeesByManager() {
+    connection.query("SELECT concat(firstName, ' ', lastName) AS EmployeeName , manager FROM roles INNER JOIN employee ON roles.roleId = employee.id AND roles.manager IS NOT NULL;", function(err, data) {
+        if (err) throw err;
+        console.log("\n");
+        console.table(data);
+        console.log("\n");
+        start();
     });
 }
 
@@ -247,7 +272,8 @@ function addEmployee() {
                 });
                 break;
         }
-        console.log("Employee " + answer.empFirstName + " " + answer.empLastName + " " + "added to Database!");
+        console.log("Employee " + answer.empFirstName + " " + answer.empLastName + " " + "added to Database!\n");
+        start();
      });
 });
 });
@@ -270,7 +296,8 @@ function removeEmployee(){
     }]).then(function(answer) {
         connection.query("DELETE roles FROM roles LEFT JOIN employee ON roles.roleId = employee.id LEFT JOIN department ON roles.department_id = department.deptId WHERE firstName = ? AND lastNAme = ?;", [answer.empFirstName, answer.empLastName], function(err) {
             if (err) throw err;
-            console.log("Employee " + answer.empFirstName + " " + answer.empLastName + " " + "deleted from Database!");
+            console.log("Employee " + answer.empFirstName + " " + answer.empLastName + " " + "deleted from Database!\n");
+            start();
         });
     });
 });
@@ -302,7 +329,8 @@ function updateRole () {
         var idValue = row[0].id;
         connection.query("UPDATE roles SET title = ? WHERE roleId = ?", [answer.empRole, idValue], function(err) {
             if (err) throw err;
-             console.log("Employee " + answer.empFirstName + " " + answer.empLastName + "'s role has been updated to " + answer.empRole);
+             console.log("Employee " + answer.empFirstName + " " + answer.empLastName + "'s role has been updated to " + answer.empRole + "\n");
+             start();
           });
     }); 
 });
@@ -321,7 +349,8 @@ function removeDepartment(){
     }]).then(function(answer) {
         connection.query("DELETE roles FROM roles LEFT JOIN employee ON roles.roleId = employee.id LEFT JOIN department ON roles.department_id = department.deptId WHERE departmentName = ?;", answer.department , function(err) {
             if (err) throw err;
-            console.log(answer.department + " department has been deleted from Database!");
+            console.log(answer.department + " department has been deleted from Database!\n");
+            start();
         });
     });
 });
@@ -358,10 +387,12 @@ function updateManager() {
             var idValue = row[0].id;
             connection.query("UPDATE roles SET manager = ? WHERE roleId = ?", [answer.empManager, idValue], function(err) {
                 if (err) throw err
-                console.log("Manager for Employee " + answer.empFirstName + " " + answer.empLastName + " is now " + answer.empManager);
+                console.log("Manager for Employee " + answer.empFirstName + " " + answer.empLastName + " is now " + answer.empManager +"\n");
+                start();
             });
     });
-    })});
+});
+});
 }
 
 function departmentBudget() {
@@ -378,8 +409,9 @@ function departmentBudget() {
             if (err) throw err;
             console.log("The total utilized budget of the " + answer.department + " department is as follows \n");
             console.table(data);
+            console.log("\n");
+            start();
         });
     });
 });
 }
-
