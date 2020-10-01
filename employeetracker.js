@@ -81,7 +81,17 @@ function start() {
                 updateRole();
                 break;
 
+            case "Update employee manager" :
+                updateManager();
+                break;
 
+            case "Remove department" :
+                removeDepartment();
+                break;
+
+            case "View total utilized budget of a department" :
+                departmentBudget();
+                break;
         }
     });
 }
@@ -243,7 +253,6 @@ function addEmployee() {
 });
 }
 
-
 function removeEmployee(){
     connection.query("SELECT id, concat(firstName, ' ', lastName) AS Name, title, departmentName, salary, manager FROM roles LEFT JOIN employee ON roles.roleId = employee.id LEFT JOIN department ON roles.department_id = department.deptId;", function(err, data) {
         if (err) throw err;
@@ -291,15 +300,86 @@ function updateRole () {
      connection.query("SELECT id FROM employee WHERE firstName = ? AND lastName = ?", [answer.empFirstName, answer.empLastName], function (err, row) {
         if (err) throw err;
         var idValue = row[0].id;
-        // connection.query("UPDATE roles SET title = ? WHERE roleId = ?", [answer.empRole, idValue], function(err) {
-        //     if (err) throw err;
-        //      console.log("Employee " + answer.firstName + " " + answer.lastName + "'s role has been updated to " + answer.empRole);
-        //   });
-    });
-     
+        connection.query("UPDATE roles SET title = ? WHERE roleId = ?", [answer.empRole, idValue], function(err) {
+            if (err) throw err;
+             console.log("Employee " + answer.empFirstName + " " + answer.empLastName + "'s role has been updated to " + answer.empRole);
+          });
+    }); 
 });
 });
 }
 
-    
+function removeDepartment(){
+    connection.query("SELECT id, concat(firstName, ' ', lastName) AS Name, title, departmentName, salary, manager FROM roles LEFT JOIN employee ON roles.roleId = employee.id LEFT JOIN department ON roles.department_id = department.deptId;", function(err, data) {
+        if (err) throw err;
+    inquirer
+    .prompt([
+    {
+        name : "department",
+        type : "input",
+        message : "Which department do you want to delete from the database?"
+    }]).then(function(answer) {
+        connection.query("DELETE roles FROM roles LEFT JOIN employee ON roles.roleId = employee.id LEFT JOIN department ON roles.department_id = department.deptId WHERE departmentName = ?;", answer.department , function(err) {
+            if (err) throw err;
+            console.log(answer.department + " department has been deleted from Database!");
+        });
+    });
+});
+}
+
+function updateManager() {
+    connection.query("SELECT id, concat(firstName, ' ', lastName) AS Name, title, departmentName, salary, manager FROM roles LEFT JOIN employee ON roles.roleId = employee.id LEFT JOIN department ON roles.department_id = department.deptId;", function(err, data) {
+        if (err) throw err;
+    inquirer.prompt([
+    {
+        name : "empFirstName",
+        type : "input",
+        message : "What is the first name of the employee whose manager needs to be updated?"
+    },
+    {
+        name : "empLastName",
+        type : "input",
+        message : "What is the last name of the employee whose manager needs to be updated?"
+    },
+    {
+        name : "empManager",
+        type : "list",
+        message : "Who is the employee's new manager?",
+        choices : function(){
+            var empManagerArray = [];
+            for (var i = 0; i < data.length; i++) {
+                empManagerArray.push(data[i].Name);
+            }
+            return empManagerArray;
+        }
+    }]).then(function(answer) {
+        connection.query("SELECT id FROM employee WHERE firstName = ? AND lastName = ?", [answer.empFirstName, answer.empLastName], function (err, row) {
+            if (err) throw err;
+            var idValue = row[0].id;
+            connection.query("UPDATE roles SET manager = ? WHERE roleId = ?", [answer.empManager, idValue], function(err) {
+                if (err) throw err
+                console.log("Manager for Employee " + answer.empFirstName + " " + answer.empLastName + " is now " + answer.empManager);
+            });
+    });
+    })});
+}
+
+function departmentBudget() {
+    connection.query("SELECT id, concat(firstName, ' ', lastName) AS Name, title, departmentName, salary, manager FROM roles LEFT JOIN employee ON roles.roleId = employee.id LEFT JOIN department ON roles.department_id = department.deptId;", function(err, data) {
+        if (err) throw err;
+    inquirer
+    .prompt([
+    {
+        name : "department",
+        type : "input",
+        message : "Which department's total utilized budget would you like to calculate?"
+    }]).then(function(answer) {
+        connection.query("SELECT SUM(salary) FROM roles INNER JOIN employee ON roles.roleId = employee.id INNER JOIN department ON roles.department_id = department.deptId WHERE departmentName = ?;", answer.department , function(err, data) {
+            if (err) throw err;
+            console.log("The total utilized budget of the " + answer.department + " department is as follows \n");
+            console.table(data);
+        });
+    });
+});
+}
 
