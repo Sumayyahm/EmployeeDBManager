@@ -9,7 +9,6 @@ var connection = mysql.createConnection({
   password: "Youaremybootcamp1!",
   database: "employeetracker_db"});
 
-
 connection.connect(function(err) {
   if (err) throw err;
   start();
@@ -254,7 +253,7 @@ function addEmployee() {
                     title : answer.empRole,
                     salary : "85000",
                     manager : answer.empManager,
-                    department_id : "4"
+                    department_id : "3"
                 }, function(err) {
                     if (err) throw err;
                         });
@@ -266,7 +265,7 @@ function addEmployee() {
                     title : answer.empRole,
                     salary : "70000",
                     manager : answer.empManager,
-                    department_id : "4"
+                    department_id : "3"
                 }, function(err) {
                     if (err) throw err;
                 });
@@ -344,9 +343,11 @@ function removeDepartment(){
     .prompt([
     {
         name : "department",
-        type : "input",
-        message : "Which department do you want to delete from the database?"
-    }]).then(function(answer) {
+        type : "list",
+        message : "Which department do you want to delete from the database?",
+        choices : ["Sales", "Engineering", "Web Development", "Finance", "Legal"]
+    }
+]).then(function(answer) {
         connection.query("DELETE roles FROM roles LEFT JOIN employee ON roles.roleId = employee.id LEFT JOIN department ON roles.department_id = department.deptId WHERE departmentName = ?;", answer.department , function(err) {
             if (err) throw err;
             console.log(answer.department + " department has been deleted from Database!\n");
@@ -402,8 +403,9 @@ function departmentBudget() {
     .prompt([
     {
         name : "department",
-        type : "input",
-        message : "Which department's total utilized budget would you like to calculate?"
+        type : "list",
+        message : "Which department's total utilized budget would you like to calculate?",
+        choices: ["Sales", "Engineering", "Web Development", "Finance", "Legal"]
     }]).then(function(answer) {
         connection.query("SELECT SUM(salary) FROM roles INNER JOIN employee ON roles.roleId = employee.id INNER JOIN department ON roles.department_id = department.deptId WHERE departmentName = ?;", answer.department , function(err, data) {
             if (err) throw err;
